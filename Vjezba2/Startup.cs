@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Metrics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -24,6 +25,13 @@ namespace Vjezba2
             Configuration = configuration;
             this.env = env;
 
+            Metric.Config.WithHttpEndpoint("http://localhost:12345/")
+                .WithInternalMetrics()
+                .WithReporting(config => config
+                    .WithCSVReports(@"c:\temp\reports\", TimeSpan.FromSeconds(30))
+                    .WithConsoleReport(TimeSpan.FromSeconds(30))
+                    .WithTextFileReport(@"C:\temp\reports\metrics.txt", TimeSpan.FromSeconds(30))
+                );
         }
 
         public IConfiguration Configuration { get; }

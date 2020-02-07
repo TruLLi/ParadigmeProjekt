@@ -11,5 +11,6 @@ namespace Vjezba2.Models
         public DriverContext(DbContextOptions<DriverContext> options) : base(options) { }
 
         public DbSet<Driver> Driver { get; set; }
+
     }
 }
