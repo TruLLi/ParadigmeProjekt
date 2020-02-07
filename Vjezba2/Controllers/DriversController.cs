@@ -16,11 +16,14 @@ namespace Vjezba2.Controllers
         public DriversController(IDriversRepository driversRepository) => this.driversRepository = driversRepository;
 
         //Metrics 
-        private readonly Timer timer = Metric.Timer("DriversController.GetDriver", Unit.Requests);
+        private readonly Timer timerGet = Metric.Timer("DriversController.GetDriver", Unit.Requests);
+        private readonly Timer timerPut = Metric.Timer("DriversController.Post", Unit.Requests);
+
+
 
         // GET: api/Drivers
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Driver>>> GetDriver()
+        public async Task<ActionResult<IEnumerable<Driver>>> Get()
         {
             var drivers = await driversRepository.GetAll();
             return Ok(drivers);
@@ -30,7 +33,7 @@ namespace Vjezba2.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Driver>> GetDriver(int id)
         {
-            using (var context = timer.NewContext(id.ToString()))
+            using (var context = timerGet.NewContext(id.ToString()))
             {
                 var driver = await driversRepository.Get(id);
                 if (driver == null)
@@ -43,24 +46,30 @@ namespace Vjezba2.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(int id, Driver driver)
         {
-            if (id != driver.Id)
-                return BadRequest();
-            var success = await driversRepository.Update(driver);
-            if (!success)
-                return NotFound();
-            return NoContent();
+            
+                if (id != driver.Id)
+                    return BadRequest();
+                var success = await driversRepository.Update(driver);
+                if (!success)
+                    return NotFound();
+                return NoContent();
+            
+                
         }
 
         // POST: api/Drivers
         [HttpPost]
         public async Task<ActionResult<Driver>> Post(Driver driver)
         {
-            if (driver.Money <= 0)
+            using (var context = timerPut.NewContext(driver.ToString()))
+            {
+                if (driver.Money <= 0)
+                    return BadRequest();
+                var success = await driversRepository.Create(driver);
+                if (success)
+                    return CreatedAtAction("GetDriver", new { id = driver.Id }, driver);
                 return BadRequest();
-            var success = await driversRepository.Create(driver);
-            if (success)
-                return CreatedAtAction("GetDriver", new { id = driver.Id }, driver);
-            return BadRequest();
+            }
         }
 
         // DELETE: api/Drivers/5
